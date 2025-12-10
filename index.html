@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Click The Colors</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --panel:#0b1220;
+      --accent:#6ee7b7;
+      --muted:#94a3b8;
+      --glass: rgba(255,255,255,0.03);
+      --card-radius:12px;
+      --gap:14px;
+      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:var(--font-sans);
+      background: linear-gradient(180deg, rgba(6,10,15,1) 0%, rgba(13,18,28,1) 100%);
+      color:#eef2ff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .app{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      gap:24px;
+    }
+
+    .card{
+      width:100%;
+      max-width:980px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--card-radius);
+      padding:20px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap:var(--gap);
+      align-items:start;
+    }
+
+    /* Left panel (status & controls) */
+    .sidebar{
+      padding:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border-radius:10px;
+      border: 1px solid rgba(255,255,255,0.04);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .title{
+      font-size:20px;
+      font-weight:700;
+      color:var(--accent);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .meta{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .targetBox{
+      margin-top:6px;
+      padding:12px;
+      border-radius:8px;
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.03);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .targetLabel{font-size:13px;color:var(--muted)}
+    .targetColor{
+      font-weight:800;
+      font-size:18px;
+      letter-spacing:0.6px;
+    }
+
+    .statusRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:8px;
+    }
+
+    .pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .controls{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+    button.btn{
+      appearance:none;
+      border:0;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:10px;
+      font-weight:700;
+      font-size:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      color:inherit;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    button.btn.primary{
+      background: linear-gradient(90deg, rgba(102, 227, 186,0.12), rgba(102,227,186,0.08));
+      color:var(--accent);
+    }
+    .small{font-size:13px;padding:8px 10px}
+
+    /* Right panel (game area) */
+    .gameArea{
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.03);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .topBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .score{
+      font-size:15px;
+      color:var(--muted);
+    }
+    .bigScore{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:0.6px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:12px;
+      margin-top:4px;
+    }
+
+    .tile{
+      border-radius:10px;
+      height:86px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+      border:1px solid rgba(255,255,255,0.03);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .tile:active{ transform: scale(.98); }
+    .tile.wrong::after{
+      content:"✕";
+      position:absolute;
+      color:rgba(255,255,255,0.9);
+      font-size:40px;
+      opacity:0.95;
+      transform:scale(0.9) rotate(-10deg);
+    }
+    .tile.correct{
+      outline: 3px solid rgba(255,255,255,0.18);
+      transform: scale(1.03);
+    }
+
+    .footer{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    /* responsive */
+    @media (max-width:860px){
+      .card{grid-template-columns:1fr; padding:16px}
+      .grid{grid-template-columns: repeat(3,1fr)}
+    }
+    @media (max-width:480px){
+      .grid{grid-template-columns: repeat(2,1fr)}
+      .tile{height:72px}
+    }
+
+    /* small helper */
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" role="application" aria-label="Click The Colors game">
+      <aside class="sidebar" aria-hidden="false">
+        <div>
+          <div class="title">🎯 Click The Colors</div>
+          <div class="meta">Cepat klik ubin berwarna yang sesuai.</div>
+        </div>
+
+        <div class="targetBox" aria-live="polite">
+          <div>
+            <div class="targetLabel">Target warna</div>
+            <div id="targetName" class="targetColor">---</div>
+          </div>
+          <div>
+            <div class="targetLabel muted">Sisa waktu</div>
+            <div id="timer" class="pill">--</div>
+          </div>
+        </div>
+
+        <div class="statusRow">
+          <div>
+            <div class="muted">Skor</div>
+            <div id="score" class="bigScore">0</div>
+          </div>
+          <div style="margin-left:auto;">
+            <div class="muted">Nyawa</div>
+            <div id="lives" class="pill">3</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="startBtn" class="btn primary">Mulai Game</button>
+          <button id="nextBtn" class="btn small hidden">Next Round</button>
+          <button id="resetBtn" class="btn small">Reset</button>
+          <div class="muted" style="font-size:13px;margin-top:6px">
+            Mode: <strong id="modeLabel">Normal</strong>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">
+          Tips: klik warna yang sesuai dengan tulisan target. Salah = -1 nyawa. Benar = +10 poin.
+        </div>
+      </aside>
+
+      <main class="gameArea">
+        <div class="topBar">
+          <div class="score muted">Waktu per ronde: <strong id="roundTime">30s</strong></div>
+          <div class="score muted">Level: <strong id="level">1</strong></div>
+        </div>
+
+        <div id="grid" class="grid" role="grid" aria-label="Grid warna">
+          <!-- Tiles diisi oleh JS -->
+        </div>
+
+        <div class="footer">
+          <div id="message" class="muted">Tekan "Mulai Game" untuk mulai.</div>
+          <div style="font-size:13px" class="muted">Made with ❤️</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const colors = [
+        {name:"Merah", hex:"#ef4444"},
+        {name:"Oranye", hex:"#fb923c"},
+        {name:"Kuning", hex:"#f59e0b"},
+        {name:"Hijau", hex:"#10b981"},
+        {name:"Biru", hex:"#3b82f6"},
+        {name:"Indigo", hex:"#6366f1"},
+        {name:"Ungu", hex:"#8b5cf6"},
+        {name:"Pink", hex:"#ec4899"},
+        {name:"Cyan", hex:"#06b6d4"},
+        {name:"Lime", hex:"#84cc16"},
+        {name:"Abu-abu", hex:"#9ca3af"},
+        {name:"Hitam", hex:"#0f172a"}
+      ];
+
+      // DOM
+      const grid = document.getElementById('grid');
+      const targetNameEl = document.getElementById('targetName');
+      const timerEl = document.getElementById('timer');
+      const scoreEl = document.getElementById('score');
+      const livesEl = document.getElementById('lives');
+      const startBtn = document.getElementById('startBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const messageEl = document.getElementById('message');
+      const roundTimeEl = document.getElementById('roundTime');
+      const levelEl = document.getElementById('level');
+      const modeLabel = document.getElementById('modeLabel');
+
+      // State
+      let score = 0;
+      let lives = 3;
+      let roundSeconds = 30; // seconds per round
+      let timerId = null;
+      let remaining = roundSeconds;
+      let level = 1;
+      let tilesCount = 8; // start with 8 tiles
+      let currentTarget = null;
+      let isPlaying = false;
+
+      function shuffle(a){
+        for(let i=a.length-1;i>0;i--){
+          const j = Math.floor(Math.random()*(i+1));
+          [a[i],a[j]]=[a[j],a[i]];
+        }
+      }
+
+      function pickTargetFrom(list){
+        return list[Math.floor(Math.random()*list.length)];
+      }
+
+      function renderGrid(){
+        grid.innerHTML = '';
+        // choose a subset of colors for the tiles
+        const pool = [...colors];
+        shuffle(pool);
+        const used = pool.slice(0, tilesCount);
+        // ensure target is present
+        if(!used.some(c=>c.name===currentTarget.name)){
+          used[Math.floor(Math.random()*used.length)] = currentTarget;
+        }
+        used.forEach((c, idx)=>{
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          tile.setAttribute('role','button');
+          tile.setAttribute('tabindex','0');
+          tile.setAttribute('aria-label', 'Tile ' + (idx+1) + ' warna ' + c.name);
+          tile.style.background = c.hex;
+          tile.dataset.colorName = c.name;
+          tile.addEventListener('click', onTileClick);
+          tile.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); tile.click(); }});
+          grid.appendChild(tile);
+        });
+      }
+
+      function newRound(){
+        // progressively increase difficulty
+        level = Math.min(20, Math.floor(score/50)+1);
+        tilesCount = Math.min(12, 6 + level); // grow up to 12 tiles
+        roundSeconds = Math.max(8, 30 - Math.floor((level-1)*1)); // reduce time slowly
+        remaining = roundSeconds;
+        levelEl.textContent = level;
+        roundTimeEl.textContent = roundSeconds + 's';
+        // pick target
+        currentTarget = pickTargetFrom(colors);
+        targetNameEl.textContent = currentTarget.name;
+        // update UI
+        messageEl.textContent = 'Klik warna yang sesuai: ' + currentTarget.name;
+        renderGrid();
+        updateStatus();
+        startTimer();
+      }
+
+      function updateStatus(){
+        scoreEl.textContent = score;
+        livesEl.textContent = lives;
+        timerEl.textContent = remaining + 's';
+      }
+
+      function endGame(reason){
+        isPlaying = false;
+        clearInterval(timerId);
+        timerId = null;
+        messageEl.textContent = 'Game over — ' + reason + '. Skor akhir: ' + score;
+        startBtn.textContent = 'Mulai Lagi';
+        nextBtn.classList.add('hidden');
+      }
+
+      function startTimer(){
+        clearInterval(timerId);
+        timerId = setInterval(()=>{
+          remaining--;
+          timerEl.textContent = remaining + 's';
+          if(remaining <= 0){
+            clearInterval(timerId);
+            // ran out of time -> lose 1 life
+            lives--;
+            updateStatus();
+            flashMessage('Waktu habis! -1 nyawa');
+            if(lives <= 0){
+              endGame('nyawa habis');
+              return;
+            } else {
+              // start next round automatically
+              setTimeout(newRound, 900);
+            }
+          }
+        }, 1000);
+      }
+
+      function flashMessage(text){
+        messageEl.textContent = text;
+        setTimeout(()=>{ if(isPlaying) messageEl.textContent = 'Klik warna yang sesuai: ' + currentTarget.name; }, 1000);
+      }
+
+      function onTileClick(e){
+        if(!isPlaying) return;
+        const tile = e.currentTarget;
+        const chosen = tile.dataset.colorName;
+        if(chosen === currentTarget.name){
+          // correct
+          tile.classList.add('correct');
+          score += 10 + Math.floor(remaining * 0.5);
+          flashMessage('Benar! +' + (10 + Math.floor(remaining*0.5)) + ' poin');
+          updateStatus();
+          // short pause then next round
+          clearInterval(timerId);
+          setTimeout(newRound, 700);
+        } else {
+          // wrong
+          tile.classList.add('wrong');
+          lives--;
+          score = Math.max(0, score - 5);
+          flashMessage('Salah! -1 nyawa');
+          updateStatus();
+          if(lives <= 0){
+            endGame('nyawa habis');
+            return;
+          }
+          // remove wrong mark after brief moment
+          setTimeout(()=>tile.classList.remove('wrong'), 600);
+        }
+      }
+
+      // Controls
+      startBtn.addEventListener('click', ()=>{
+        if(!isPlaying){
+          // start new game
+          score = 0; lives = 3; level = 1;
+          isPlaying = true;
+          startBtn.textContent = 'Sedang Berlangsung...';
+          nextBtn.classList.add('hidden');
+          newRound();
+        }
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        clearInterval(timerId);
+        timerId = null;
+        score = 0; lives = 3; level = 1;
+        isPlaying = false;
+        remaining = roundSeconds = 30;
+        tilesCount = 8;
+        targetNameEl.textContent = '---';
+        scoreEl.textContent = '0';
+        livesEl.textContent = '3';
+        timerEl.textContent = '--';
+        messageEl.textContent = 'Reset selesai. Tekan "Mulai Game" untuk mulai.';
+        startBtn.textContent = 'Mulai Game';
+        levelEl.textContent = '1';
+        roundTimeEl.tex
